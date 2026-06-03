@@ -1,7 +1,8 @@
 import React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "../../public/firebase";
+import { useParams, useSearchParams } from 'react-router-dom';
 
 const dummyRecipe = {
   title: "Spicy Garlic Butter Pasta",
@@ -26,7 +27,49 @@ const dummyRecipe = {
 };
 
 export default function RecipeDetail() {
+    // get the parameters
+    const { id } = useParams();
+    const [searchParams] = useSearchParams();
+    const source = searchParams.get("source"); 
+
+    const [recipe, setRecipe] = useState(null);
+    const [loading, setLoading] = useState(true);
     const [uploadedImageUrl, setUploadedImageUrl] = useState("");
+    const [isIngredientsOpen, setIsIngredientsOpen] = useState(true);
+
+    // get data from backend
+    useEffect(() => {
+        const fetchRecipe = async () => {
+            try {
+                const response = await fetch(`http://localhost:5000/api/recipes/${id}?source=${source}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    setRecipe(data);
+                } else {
+                    console.error("Backend error:", data.error);
+                }
+            } catch (error) {
+                console.error("Failed to connect to backend", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (id && source) {
+            fetchRecipe();
+        }
+    }, [id, source]);
+
+    // Loading message while waiting
+    if (loading) {
+        return <div className="min-h-screen p-8 text-center text-2xl font-serif">Loading Recipe...</div>;
+    }
+
+    // Error if it doesn't exist
+    if (!recipe) {
+        return <div className="min-h-screen p-8 text-center text-2xl font-serif text-red-500">Recipe not found!</div>;
+    }
 
     const handleUpload = async (event) => {
         const file = event.target.files[0];
@@ -52,47 +95,65 @@ export default function RecipeDetail() {
             <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12">
                 {/*Left column */}
                 <div className="md:col-span-2 space-y-6"
-                    key={dummyRecipe.title}>
+                    key={recipe.title}>
 
                     {/* Title, Ratings, Comments, etc. */}
                     <div className="text-center">
-                        <h1 className="text-4xl md:text-5xl font-serif text-slate-800 mb-2">{dummyRecipe.title}</h1>
+                        <h1 className="text-4xl md:text-5xl font-serif text-slate-800 mb-2">{recipe.title}</h1>
+                    </div>
+
+                    <div className="flex flex-wrap justify-center items-center gap-6 mt-4 text-slate-700 font-medium">
+                        {/* Save Recipe Button */}
+                        <button className="flex items-center gap-2 hover:text-slate-900 transition">
+                            <span className="text-xl">⊕</span> Save Recipe
+                        </button>
+                        
+                        {/* Rating */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-xl">★</span> Rating: 4.5/5
+                        </div>
+                        
+                        {/* Jump to Comments (Uses an anchor tag to scroll down) */}
+                        <a href="#comments-section" className="flex items-center gap-2 hover:text-slate-900 transition">
+                            <span className="text-xl">💬</span> 27 Comments
+                        </a>
                     </div>
 
                     {/* Main image */}
                     <div>
                         <img 
-                            src={dummyRecipe.imageUrl}
-                            alt={dummyRecipe.title}
+                            src={recipe.imageUrl}
+                            alt={recipe.title}
                             className="w-full aspect-video object-cover rounded-xl shadow-lg"
                         />
                     </div>
 
-                    {/* Tags, Description, Instructions */}
-                    <div>
+                    {/* User Photo Section */}
+                    <div className="mt-4 text-center">
+                        <label className="cursor-pointer bg-slate-800 text-white px-4 py-2 rounded-md hover:bg-slate-700 transition">
+                            Upload Photo
+                            <input type="file" className="hidden" accept="image/*" onChange={handleUpload} />
+                        </label>
+                    </div>
+
+                    {uploadedImageUrl && (
                         <div className="mt-4 text-center">
-                            <label className="cursor-pointer bg-slate-800 text-white px-4 py-2 rounded-md hover:bg-slate-700 transition">
-                                Upload Photo
-                                <input type="file" className="hidden" accept="image/*" onChange={handleUpload} />
-                            </label>
+                            <p><strong>Your Uploaded Photo(s): </strong></p>
+                            <img src={uploadedImageUrl} className="w-48 h-auto rounded-lg shadow-md" />
                         </div>
+                    )}
 
-                        {uploadedImageUrl && (
-                            <div className="mt-4 text-center">
-                                <p><strong>Your Uploaded Photo(s): </strong></p>
-                                <img src={uploadedImageUrl} className="w-48 h-auto rounded-lg shadow-md" />
-                            </div>
-                        )}
-
+                    {/* Tags, Description, Instructions */}
+                    <div className="bg-white rounded-lg p-6 shadow-md">
                         <h2 className="text-3xl font-serif text-slate-800 mb-4 mt-8">Tags: </h2>
-                        <p>{dummyRecipe.category}</p>
+                        <p>{recipe.category}</p>
 
                         <h2 className="text-3xl font-serif text-slate-800 mb-4 mt-8">Description: </h2>
-                        <p>{dummyRecipe.description}</p>
+                        <p>{recipe.description}</p>
 
                         <h2 className="text-3xl font-serif text-slate-800 mb-4 mt-8">Instructions: </h2>
                         <ol className="list-decimal list-outside ml-6 space-y-4 text-lg text-slate-700">
-                            {dummyRecipe.instructions.map((step, index) => (
+                            {recipe.instructions?.map((step, index) => (
                                 <li key={index} className="pl-2">
                                     {step}
                                 </li>
@@ -101,7 +162,7 @@ export default function RecipeDetail() {
                     </div>
 
                     {/* Comment Section */}
-                    <div className="mt-12 p-4 border-2 border-dashed border-gray-400 text-center">
+                    <div className="mt-12 p-4 border-2 border-dashed border-gray-400 text-center" id="comments-section">
                             [CommentSection Component Goes Here]
                     </div>
                 </div>
@@ -109,23 +170,38 @@ export default function RecipeDetail() {
                 {/* RIGHT COLUMN */}
                 <div className="md:col-span-1">
 
-                    {/* Ingredients Box */}
-                    <div className="bg-[#D9D9D9] p-6 rounded-md shadow-sm sticky top-8">
-                        {/* Ingredients checklist here */}
-                        <h2 className="text-2xl font-serif text-center mb-6">Ingredients</h2>
-                        <ul className="space-y-3">
-                            {dummyRecipe.ingredients.map((ingredient, index) => (
-                                <li key={index} className="flex items-center gap-3">
-                                    <div className="w-5 h-5 border-2 border-slate-700 rounded-sm"></div>
-                                    <span className="text-slate-800">{ingredient}</span>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
+                    <div className="sticky top-8 space-y-8">
+                        {/* Ingredients Box */}
+                        <div className="bg-[#D9D9D9] p-6 rounded-md shadow-sm">
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-2xl font-serif">Ingredients</h2>
+                                
+                                {/* Toggle Button */}
+                                <button 
+                                    onClick={() => setIsIngredientsOpen(!isIngredientsOpen)}
+                                    className="text-2xl font-bold border-2 border-slate-700 px-2 rounded hover:bg-slate-300 transition"
+                                >
+                                    {isIngredientsOpen ? "-" : "+"}
+                                </button>
 
-                    {/* CHATBOT */}
-                    <div className="mt-8 p-4 border-2 border-dashed border-gray-400 text-center">
-                        [Chatbot Component Goes Here]
+                            </div>
+
+                            {isIngredientsOpen && (
+                                <ul className="space-y-3">
+                                    {recipe.ingredients?.map((ingredient, index) => (
+                                        <li key={index} className="flex items-center gap-3">
+                                            <div className="w-5 h-5 border-2 border-slate-700 rounded-sm shrink-0"></div>
+                                            <span className="text-slate-800">{ingredient}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+
+                        {/* CHATBOT */}
+                        <div className="mt-8 p-4 border-2 border-dashed border-gray-400 text-center">
+                            [Chatbot Component Goes Here]
+                        </div>
                     </div>
                 </div>
             </div>

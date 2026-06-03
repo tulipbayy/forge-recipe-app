@@ -26,7 +26,19 @@ router.get('/:id', async (req, res) => {
             }
 
             const data = await response.json();
-            return res.json(data.recipe);
+            const edamamRecipe = data.recipe;
+
+            // translating Edamam schema into ours
+            const normalizedRecipe = {
+                title: edamamRecipe.label,
+                imageUrl: edamamRecipe.image,
+                category: edamamRecipe.dishType ? edamamRecipe.dishType[0] : "Dinner", 
+                description: `Source: ${edamamRecipe.source}`, 
+                ingredients: edamamRecipe.ingredientLines,
+                // Edamam returns a URL to the blog instead of full instructions
+                instructions: [`For full instructions, please visit: ${edamamRecipe.url}`] 
+            };
+            return res.json(normalizedRecipe);
         } else if (source === 'community') {
             console.log(`Fetching recipe ${recipeId} from Firestore...`);
 
