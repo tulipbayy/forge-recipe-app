@@ -1,4 +1,7 @@
 import React from 'react';
+import { useState } from 'react';
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { storage } from "../../public/firebase";
 
 const dummyRecipe = {
   title: "Spicy Garlic Butter Pasta",
@@ -23,25 +26,78 @@ const dummyRecipe = {
 };
 
 export default function RecipeDetail() {
+    const [uploadedImageUrl, setUploadedImageUrl] = useState("");
+
+    const handleUpload = async (event) => {
+        const file = event.target.files[0];
+        if (!file) { return; }
+
+        try {
+            console.log("Uploading photo...");
+
+            const storageRef = ref(storage, `images/${file.name}`);
+            await uploadBytes(storageRef, file);
+
+            const url = await getDownloadURL(storageRef);
+            console.log("Success! Image URL:", url);
+
+            setUploadedImageUrl(url);
+        } catch (error) {
+            console.error("Upload failed: ", error);
+        }
+    }
+
     return ( 
         <div className="min-h-screen bg-[#E8F3EB] p-8 font-sans text-gray-800">
             <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12">
                 {/*Left column */}
-                <div className="md:col-span-2 space-y-6">
+                <div className="md:col-span-2 space-y-6"
+                    key={dummyRecipe.title}>
 
-                    {/* Title and Ratings */}
+                    {/* Title, Ratings, Comments, etc. */}
                     <div className="text-center">
-
+                        <h1 className="text-4xl md:text-5xl font-serif text-slate-800 mb-2">{dummyRecipe.title}</h1>
                     </div>
 
                     {/* Main image */}
                     <div>
-
+                        <img 
+                            src={dummyRecipe.imageUrl}
+                            alt={dummyRecipe.title}
+                            className="w-full aspect-video object-cover rounded-xl shadow-lg"
+                        />
                     </div>
 
                     {/* Tags, Description, Instructions */}
                     <div>
+                        <div className="mt-4 text-center">
+                            <label className="cursor-pointer bg-slate-800 text-white px-4 py-2 rounded-md hover:bg-slate-700 transition">
+                                Upload Photo
+                                <input type="file" className="hidden" accept="image/*" onChange={handleUpload} />
+                            </label>
+                        </div>
 
+                        {uploadedImageUrl && (
+                            <div className="mt-4 text-center">
+                                <p><strong>Your Uploaded Photo(s): </strong></p>
+                                <img src={uploadedImageUrl} className="w-48 h-auto rounded-lg shadow-md" />
+                            </div>
+                        )}
+
+                        <h2 className="text-3xl font-serif text-slate-800 mb-4 mt-8">Tags: </h2>
+                        <p>{dummyRecipe.category}</p>
+
+                        <h2 className="text-3xl font-serif text-slate-800 mb-4 mt-8">Description: </h2>
+                        <p>{dummyRecipe.description}</p>
+
+                        <h2 className="text-3xl font-serif text-slate-800 mb-4 mt-8">Instructions: </h2>
+                        <ol className="list-decimal list-outside ml-6 space-y-4 text-lg text-slate-700">
+                            {dummyRecipe.instructions.map((step, index) => (
+                                <li key={index} className="pl-2">
+                                    {step}
+                                </li>
+                            ))}
+                        </ol>
                     </div>
 
                     {/* Comment Section */}
@@ -56,6 +112,15 @@ export default function RecipeDetail() {
                     {/* Ingredients Box */}
                     <div className="bg-[#D9D9D9] p-6 rounded-md shadow-sm sticky top-8">
                         {/* Ingredients checklist here */}
+                        <h2 className="text-2xl font-serif text-center mb-6">Ingredients</h2>
+                        <ul className="space-y-3">
+                            {dummyRecipe.ingredients.map((ingredient, index) => (
+                                <li key={index} className="flex items-center gap-3">
+                                    <div className="w-5 h-5 border-2 border-slate-700 rounded-sm"></div>
+                                    <span className="text-slate-800">{ingredient}</span>
+                                </li>
+                            ))}
+                        </ul>
                     </div>
 
                     {/* CHATBOT */}
