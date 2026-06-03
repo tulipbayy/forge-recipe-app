@@ -1,6 +1,9 @@
 import { auth } from "../../public/firebase";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5001/api";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_API_BASE ||
+  "http://localhost:5001/api";
 
 async function authHeaders() {
   const user = auth.currentUser;
@@ -9,14 +12,30 @@ async function authHeaders() {
   return { Authorization: `Bearer ${token}` };
 }
 
+export async function apiRequest(path, options = {}) {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+    ...options,
+  });
+
+  if (!response.ok) {
+    throw new Error(`API request failed: ${response.status}`);
+  }
+
+  return response.json();
+}
+
 export async function getComments(recipeId) {
-  const res = await fetch(`${API_BASE}/recipes/${recipeId}/comments`);
+  const res = await fetch(`${API_BASE_URL}/recipes/${recipeId}/comments`);
   if (!res.ok) throw new Error("Failed to load comments");
   return res.json();
 }
 
 export async function postComment(recipeId, text, parentCommentId = null) {
-  const res = await fetch(`${API_BASE}/recipes/${recipeId}/comments`, {
+  const res = await fetch(`${API_BASE_URL}/recipes/${recipeId}/comments`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -29,7 +48,7 @@ export async function postComment(recipeId, text, parentCommentId = null) {
 }
 
 export async function deleteComment(commentId) {
-  const res = await fetch(`${API_BASE}/comments/${commentId}`, {
+  const res = await fetch(`${API_BASE_URL}/comments/${commentId}`, {
     method: "DELETE",
     headers: await authHeaders(),
   });
@@ -37,7 +56,7 @@ export async function deleteComment(commentId) {
 }
 
 export async function toggleUpvote(commentId) {
-  const res = await fetch(`${API_BASE}/comments/${commentId}/upvote`, {
+  const res = await fetch(`${API_BASE_URL}/comments/${commentId}/upvote`, {
     method: "POST",
     headers: await authHeaders(),
   });
