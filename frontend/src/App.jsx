@@ -1,5 +1,5 @@
-import { Routes, Route } from 'react-router-dom';
-import RecipeDetail from './pages/RecipeDetail';
+import { Routes, Route } from "react-router-dom";
+import RecipeDetail from "./pages/RecipeDetail";
 
 function App() {
   return (
