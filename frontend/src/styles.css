@@ -496,6 +496,142 @@ button.return-link {
   line-height: 1.5;
 }
 
+.detail-page {
+  padding: clamp(28px, 5vw, 56px);
+}
+
+.detail-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(260px, 0.8fr);
+  gap: 36px;
+  width: min(1180px, 100%);
+  margin: 28px auto 0;
+}
+
+.detail-main {
+  display: grid;
+  gap: 20px;
+}
+
+.detail-main h1 {
+  color: var(--ink);
+  text-align: center;
+}
+
+.detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 18px;
+}
+
+.detail-actions button,
+.upload-button {
+  border: 0;
+  border-radius: 6px;
+  background: var(--ink);
+  color: white;
+  cursor: pointer;
+  padding: 10px 14px;
+}
+
+.detail-image {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.upload-button {
+  justify-self: center;
+}
+
+.upload-button input {
+  display: none;
+}
+
+.uploaded-photo {
+  text-align: center;
+}
+
+.uploaded-photo img {
+  width: 190px;
+  border-radius: 8px;
+}
+
+.detail-panel,
+.ingredients-panel {
+  border-radius: 8px;
+  background: white;
+  padding: 22px;
+}
+
+.detail-panel h2 {
+  margin: 22px 0 8px;
+}
+
+.detail-panel h2:first-child {
+  margin-top: 0;
+}
+
+.detail-panel ol {
+  padding-left: 22px;
+}
+
+.ingredients-panel {
+  align-self: start;
+  position: sticky;
+  top: 90px;
+}
+
+.ingredients-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ingredients-heading h2 {
+  margin: 0;
+}
+
+.ingredients-heading button {
+  width: 34px;
+  height: 34px;
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.ingredients-panel ul {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.ingredients-panel li {
+  display: flex;
+  gap: 10px;
+}
+
+.ingredients-panel li span {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--ink);
+  border-radius: 3px;
+  flex: 0 0 auto;
+}
+
+.chatbot-placeholder {
+  margin-top: 24px;
+  border: 2px dashed #aab5af;
+  padding: 16px;
+  text-align: center;
+}
+
 @media (max-width: 820px) {
   .app-frame {
     width: 100%;
@@ -551,6 +687,14 @@ button.return-link {
   .my-recipes-header {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .detail-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .ingredients-panel {
+    position: static;
   }
 }
 
