@@ -4,6 +4,8 @@ import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { storage } from "../../public/firebase";
 import AppLayout from "../components/AppLayout.jsx";
 import CommentSection from "../components/CommentSection.jsx";
+import { API_BASE_URL } from "../services/api.js";
+import { getRecipes } from "../services/recipeService.js";
 
 const fallbackRecipe = {
   title: "Spicy Garlic Butter Pasta",
@@ -48,16 +50,25 @@ export default function RecipeDetail() {
 
     async function fetchRecipe() {
       try {
-        const response = await fetch(
-          `http://localhost:5000/api/recipes/${resolvedRecipeId}?source=${source}`
-        );
-        const data = await response.json();
-
-        if (response.ok) {
-          setRecipe(data);
+        if (source === "community") {
+          const response = await fetch(`${API_BASE_URL}/recipes/${resolvedRecipeId}?source=${source}`);
+          const data = await response.json();
+          if (response.ok) {
+            setRecipe(data);
+          }
+        } else if (source === "official") {
+          // use local data for official recipes
+          const list = await getRecipes({ source: "official" });
+          const found = list.find((r) => r.recipeId === resolvedRecipeId);
+          if (found) setRecipe(found);
+        } else {
+          // default: try backend
+          const response = await fetch(`${API_BASE_URL}/recipes/${resolvedRecipeId}?source=${source}`);
+          const data = await response.json();
+          if (response.ok) setRecipe(data);
         }
       } catch (error) {
-        console.error("Failed to connect to backend", error);
+        console.error("Failed to load recipe", error);
       } finally {
         setLoading(false);
       }

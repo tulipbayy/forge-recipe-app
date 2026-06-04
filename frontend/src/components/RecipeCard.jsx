@@ -16,7 +16,7 @@ export default function RecipeCard({
   onDelete,
   onRemove,
 }) {
-  const detailPath = `/recipes/${recipe.recipeId}`;
+  const detailPath = `/recipes/${recipe.recipeId}${recipe.source ? `?source=${recipe.source}` : ""}`;
   const actionCount = [onEdit, onDelete, onRemove].filter(Boolean).length;
 
   if (variant === "manage") {
