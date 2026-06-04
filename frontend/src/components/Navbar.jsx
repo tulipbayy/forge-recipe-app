@@ -13,8 +13,9 @@ export default function Navbar({ onMenuClick }) {
       </div>
       <nav aria-label="Primary navigation">
         <NavLink to="/">Home</NavLink>
-        <NavLink to="/recipes">Recipe</NavLink>
+        <NavLink to="/recipes">Recipes</NavLink>
         <NavLink to="/my-recipes">My Recipes</NavLink>
+        <NavLink to="/create-recipe">Create Recipe</NavLink>
       </nav>
       <div className="avatar" aria-label="Current user">
         JD

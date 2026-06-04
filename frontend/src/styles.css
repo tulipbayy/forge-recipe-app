@@ -108,10 +108,15 @@ a {
 
 .top-nav nav a {
   position: relative;
-  padding: 24px 0 20px;
-  color: #7dcbd0;
+  padding: 20px 0 18px;
+  color: #7b8790;
   font-size: 1rem;
   font-weight: 700;
+  transition: color 180ms ease;
+}
+
+.top-nav nav a:hover {
+  color: var(--ink);
 }
 
 .top-nav nav a.active {
@@ -239,8 +244,9 @@ h1 {
 
 .recipe-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 10px;
+  justify-content: center;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 360px));
+  gap: 20px;
   width: min(1220px, 100%);
   margin: 16px auto 0;
 }
@@ -248,15 +254,18 @@ h1 {
 .recipe-card {
   position: relative;
   overflow: hidden;
-  border-radius: 4px;
+  border-radius: 10px;
   background: var(--paper);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .recipe-card img {
   display: block;
   width: 100%;
-  aspect-ratio: 16 / 8.2;
+  aspect-ratio: 16 / 9;
   object-fit: cover;
 }
 
@@ -276,7 +285,8 @@ h1 {
 }
 
 .recipe-card-body {
-  padding: 8px 10px 14px;
+  padding: 12px 14px 18px;
+  flex: 1;
 }
 
 .recipe-card-heading {
@@ -431,13 +441,17 @@ button.return-link {
 }
 
 .manage-grid {
+  justify-content: center;
+  display: grid;
   gap: 28px;
   margin-top: 36px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 360px));
 }
 
 .manage-card {
   border-radius: 10px;
-  box-shadow: none;
+  box-shadow: var(--shadow);
+  width: 100%;
 }
 
 .manage-card img {

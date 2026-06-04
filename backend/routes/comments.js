@@ -5,7 +5,18 @@ import { requireAuth } from "../middleware/auth.js";
 
 const router = express.Router();
 
-router.get("/recipes/:recipeId/comments", async (req, res) => {
+function requireFirebaseAdmin(req, res, next) {
+  if (!db) {
+    return res.status(503).json({
+      error:
+        "Firebase Admin is not configured. Add backend/serviceAccountKey.json or FIREBASE_SERVICE_ACCOUNT in backend/.env.",
+    });
+  }
+
+  next();
+}
+
+router.get("/recipes/:recipeId/comments", requireFirebaseAdmin, async (req, res) => {
   try {
     const { recipeId } = req.params;
     const snapshot = await db

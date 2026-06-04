@@ -11,6 +11,10 @@ app.use("/api/recipes", recipeRoutes);
 
 const PORT = process.env.PORT || 5001;
 
+app.get("/", (req, res) => {
+  res.json({ message: "Forge Recipe App backend is running. Use /api/recipes or /api/comments." });
+});
+
 // just to test if connection works
 app.get("/api/ping", (req, res) => {
   res.json({ message: "Express server is running!" });

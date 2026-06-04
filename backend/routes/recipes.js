@@ -40,6 +40,12 @@ router.get('/:id', async (req, res) => {
             };
             return res.json(normalizedRecipe);
         } else if (source === 'community') {
+            if (!db) {
+                return res.status(503).json({
+                    error: "Firebase Admin is not configured. Add backend/serviceAccountKey.json or FIREBASE_SERVICE_ACCOUNT in backend/.env."
+                });
+            }
+
             console.log(`Fetching recipe ${recipeId} from Firestore...`);
 
             const docRef = db.collection('recipes').doc(recipeId);

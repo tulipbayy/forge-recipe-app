@@ -17,13 +17,13 @@ export default function AppLayout({ children }) {
             Home
           </NavLink>
           <NavLink to="/recipes" onClick={() => setIsSideNavOpen(false)}>
-            Recipe
+            Recipes
           </NavLink>
           <NavLink to="/my-recipes" onClick={() => setIsSideNavOpen(false)}>
             My Recipes
           </NavLink>
           <NavLink to="/create-recipe" onClick={() => setIsSideNavOpen(false)}>
-            Create Recipes
+            Create Recipe
           </NavLink>
         </nav>
       </div>
