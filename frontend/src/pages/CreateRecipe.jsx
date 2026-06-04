@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { storage } from "../../public/firebase";
 import { useAuth } from "../context/AuthContext";
 import { createRecipe } from "../services/api";
 
@@ -13,6 +15,8 @@ export default function CreateRecipe() {
   const [title, setTitle] = useState("");
   const [ingredients, setIngredients] = useState(["", ""]);
   const [instructions, setInstructions] = useState([""]);
+  const [imageUrl, setImageUrl] = useState("");
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -36,6 +40,25 @@ export default function CreateRecipe() {
     setInstructions(updated);
   };
 
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    setError("");
+    try {
+      const storageRef = ref(storage, `recipe-images/${Date.now()}-${file.name}`);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      setImageUrl(url);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to upload image.");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -51,7 +74,7 @@ export default function CreateRecipe() {
         title,
         ingredients,
         instructions,
-        imageUrl: defaultImage,
+        imageUrl,
       });
       navigate(`/recipe/${data.recipeId}?source=community`);
     } catch (err) {
@@ -129,12 +152,22 @@ export default function CreateRecipe() {
               </button>
             </div>
 
-            <div>
+            <div className="space-y-4">
               <img
-                src={defaultImage}
+                src={imageUrl || defaultImage}
                 alt="Recipe preview"
                 className="w-full rounded-2xl object-cover aspect-[4/3] shadow-sm"
               />
+              <label className="block cursor-pointer bg-[#c8dece] hover:bg-[#b0ceb7] text-[#3d6b4f] px-4 py-2 rounded-lg text-sm font-medium transition text-center">
+                {uploadingImage ? "Uploading..." : "Upload Image"}
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  disabled={uploadingImage}
+                />
+              </label>
             </div>
           </div>
         </form>
