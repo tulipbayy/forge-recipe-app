@@ -4,6 +4,7 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "../../public/firebase";
 import { useParams, useSearchParams } from 'react-router-dom';
 import CommentSection from "../components/CommentSection";
+// import Chatbot from "../components/Chatbot";
 
 const dummyRecipe = {
   title: "Spicy Garlic Butter Pasta",
@@ -39,12 +40,14 @@ export default function RecipeDetail() {
     const [loading, setLoading] = useState(true);
     const [uploadedImageUrl, setUploadedImageUrl] = useState("");
     const [isIngredientsOpen, setIsIngredientsOpen] = useState(true);
+    const [userRating, setUserRating] = useState(0);
+    const [commentCount, setCommentCount] = useState(0);
 
     // get data from backend
     useEffect(() => {
         const fetchRecipe = async () => {
             try {
-                const response = await fetch(`http://localhost:5000/api/recipes/${id}?source=${source}`);
+                const response = await fetch(`http://localhost:5001/api/recipes/${id}?source=${source}`);
                 const data = await response.json();
                 
                 if (response.ok) {
@@ -93,185 +96,159 @@ export default function RecipeDetail() {
     } catch (error) {
       console.error("Upload failed: ", error);
     }
+  }
+
+  const handleRate = async (starNumber) => {
+    setUserRating(starNumber);
+    
+    try {
+        await fetch(`http://localhost:5001/api/recipes/${id}/rate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rating: starNumber })
+        });
+        console.log("Rating saved to database!");
+
+        const freshResponse = await fetch(`http://localhost:5001/api/recipes/${id}?source=${source}`);
+        const freshData = await freshResponse.json();
+        setRecipe(freshData);
+    } catch (error) {
+        console.error("Failed to save rating", error);
+    }
+  };
 
     return ( 
-        <div className="min-h-screen bg-[#E8F3EB] p-8 font-sans text-gray-800">
-            <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12">
-                {/*Left column */}
-                <div className="md:col-span-2 space-y-6"
-                    key={recipe.title}>
+      <div className="min-h-screen bg-[#E8F3EB] p-8 font-sans text-gray-800">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12">
 
-                    {/* Title, Ratings, Comments, etc. */}
-                    <div className="text-center">
-                        <h1 className="text-4xl md:text-5xl font-serif text-slate-800 mb-2">{recipe.title}</h1>
-                    </div>
+          {/* LEFT COLUMN */}
+          <div className="md:col-span-2 space-y-6" key={recipe.title}>
+            
+            {/* Title */}
+            <div className="text-center">
+              <h1 className="text-4xl md:text-5xl font-serif text-slate-800 mb-2">
+                {recipe.title}
+              </h1>
+            </div>
 
-                    <div className="flex flex-wrap justify-center items-center gap-6 mt-4 text-slate-700 font-medium">
-                        {/* Save Recipe Button */}
-                        <button className="flex items-center gap-2 hover:text-slate-900 transition">
-                            <span className="text-xl">⊕</span> Save Recipe
-                        </button>
-                        
-                        {/* Rating */}
-                        <div className="flex items-center gap-2">
-                            <span className="text-xl">★</span> Rating: 4.5/5
-                        </div>
-                        
-                        {/* Jump to Comments (Uses an anchor tag to scroll down) */}
-                        <a href="#comments-section" className="flex items-center gap-2 hover:text-slate-900 transition">
-                            <span className="text-xl">💬</span> 27 Comments
-                        </a>
-                    </div>
+            {/* Action Buttons */}
+            <div className="flex flex-wrap justify-center items-center gap-6 mt-4 text-slate-700 font-medium">
+              <button className="flex items-center gap-2 hover:text-slate-900 transition">
+                <span className="text-xl">⊕</span> Save Recipe
+              </button>
+              <div className="flex items-center gap-2">
+                <span className="text-xl">★</span> Rating: {recipe.averageRating ? recipe.averageRating : "New"}/5.0
+              </div>
+              <a href="#comments-section" className="flex items-center gap-2 hover:text-slate-900 transition">
+                <span className="text-xl">💬</span> {commentCount} Comment(s)
+              </a>
+            </div>
 
-                    {/* Main image */}
-                    <div>
-                        <img 
-                            src={recipe.imageUrl}
-                            alt={recipe.title}
-                            className="w-full aspect-video object-cover rounded-xl shadow-lg"
-                        />
-                    </div>
+            {/* Main Image */}
+            <div>
+              <img
+                src={recipe.imageUrl}
+                alt={recipe.title}
+                className="w-full aspect-video object-cover rounded-xl shadow-lg"
+              />
+            </div>
 
-                    {/* User Photo Section */}
-                    <div className="mt-4 text-center">
-                        <label className="cursor-pointer bg-slate-800 text-white px-4 py-2 rounded-md hover:bg-slate-700 transition">
-                            Upload Photo
-                            <input type="file" className="hidden" accept="image/*" onChange={handleUpload} />
-                        </label>
-                    </div>
-
-                    {uploadedImageUrl && (
-                        <div className="mt-4 text-center">
-                            <p><strong>Your Uploaded Photo(s): </strong></p>
-                            <img src={uploadedImageUrl} className="w-48 h-auto rounded-lg shadow-md" />
-                        </div>
-                    )}
-
-                    {/* Tags, Description, Instructions */}
-                    <div className="bg-white rounded-lg p-6 shadow-md">
-                        <h2 className="text-3xl font-serif text-slate-800 mb-4 mt-8">Tags: </h2>
-                        <p>{recipe.category}</p>
-
-                        <h2 className="text-3xl font-serif text-slate-800 mb-4 mt-8">Description: </h2>
-                        <p>{recipe.description}</p>
-
-                        <h2 className="text-3xl font-serif text-slate-800 mb-4 mt-8">Instructions: </h2>
-                        <ol className="list-decimal list-outside ml-6 space-y-4 text-lg text-slate-700">
-                            {recipe.instructions?.map((step, index) => (
-                                <li key={index} className="pl-2">
-                                    {step}
-                                </li>
-                            ))}
-                        </ol>
-                    </div>
-
-                    {/* Comment Section */}
-                    <div className="mt-12 p-4 border-2 border-dashed border-gray-400 text-center" id="comments-section">
-                            [CommentSection Component Goes Here]
-                    </div>
-                </div>
-
-                {/* RIGHT COLUMN */}
-                <div className="md:col-span-1">
-
-                    <div className="sticky top-8 space-y-8">
-                        {/* Ingredients Box */}
-                        <div className="bg-[#D9D9D9] p-6 rounded-md shadow-sm">
-                            <div className="flex justify-between items-center mb-4">
-                                <h2 className="text-2xl font-serif">Ingredients</h2>
-                                
-                                {/* Toggle Button */}
-                                <button 
-                                    onClick={() => setIsIngredientsOpen(!isIngredientsOpen)}
-                                    className="text-2xl font-bold border-2 border-slate-700 px-2 rounded hover:bg-slate-300 transition"
-                                >
-                                    {isIngredientsOpen ? "-" : "+"}
-                                </button>
-
-                            </div>
-
-                            {isIngredientsOpen && (
-                                <ul className="space-y-3">
-                                    {recipe.ingredients?.map((ingredient, index) => (
-                                        <li key={index} className="flex items-center gap-3">
-                                            <div className="w-5 h-5 border-2 border-slate-700 rounded-sm shrink-0"></div>
-                                            <span className="text-slate-800">{ingredient}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
-                        </div>
-
-                        {/* CHATBOT */}
-                        <div className="mt-8 p-4 border-2 border-dashed border-gray-400 text-center">
-                            [Chatbot Component Goes Here]
-                        </div>
-                    </div>
-                </div>
+            {/* Upload Photo Button */}
+            <div className="mt-4 text-center">
+              <label className="cursor-pointer bg-slate-800 text-white px-4 py-2 rounded-md hover:bg-slate-700 transition">
+                Upload Photo
+                <input type="file" className="hidden" accept="image/*" onChange={handleUpload} />
+              </label>
             </div>
 
             {uploadedImageUrl && (
               <div className="mt-4 text-center">
-                <p>
-                  <strong>Your Uploaded Photo(s): </strong>
-                </p>
-                <img
-                  src={uploadedImageUrl}
-                  className="w-48 h-auto rounded-lg shadow-md"
-                />
+                <p><strong>Your Uploaded Photo: </strong></p>
+                <img src={uploadedImageUrl} className="w-48 h-auto rounded-lg shadow-md mx-auto" />
               </div>
             )}
 
-            <h2 className="text-3xl font-serif text-slate-800 mb-4 mt-8">
-              Tags:{" "}
-            </h2>
-            <p>{dummyRecipe.category}</p>
+            {/* Tags, Description, Instructions */}
+            <div className="bg-white rounded-lg p-6 shadow-md">
+              <h2 className="text-3xl font-serif text-slate-800 mb-4 mt-8">Tags:</h2>
+              <p>{recipe.category}</p>
+              <h2 className="text-3xl font-serif text-slate-800 mb-4 mt-8">Description:</h2>
+              <p>{recipe.description}</p>
+              <h2 className="text-3xl font-serif text-slate-800 mb-4 mt-8">Instructions:</h2>
+              <ol className="list-decimal list-outside ml-6 space-y-4 text-lg text-slate-700">
+                {recipe.instructions?.map((step, index) => (
+                  <li key={index} className="pl-2">{step}</li>
+                ))}
+              </ol>
+            </div>
 
-            <h2 className="text-3xl font-serif text-slate-800 mb-4 mt-8">
-              Description:{" "}
-            </h2>
-            <p>{dummyRecipe.description}</p>
+            {/* Rating Section */}
+            <div className="mt-12 bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                <h3 className="text-xl font-serif text-slate-800 mb-3">Rate this recipe:</h3>
+                <div className="flex gap-2">
 
-            <h2 className="text-3xl font-serif text-slate-800 mb-4 mt-8">
-              Instructions:{" "}
-            </h2>
-            <ol className="list-decimal list-outside ml-6 space-y-4 text-lg text-slate-700">
-              {dummyRecipe.instructions.map((step, index) => (
-                <li key={index} className="pl-2">
-                  {step}
-                </li>
-              ))}
-            </ol>
+                    {/* for 5 stars */}
+                    {[1, 2, 3, 4, 5].map((starNumber) => (
+                        <button
+                            key={starNumber}
+                            onClick={() => handleRate(starNumber)}
+                            className="text-4xl focus:outline-none transition-transform hover:scale-110"
+                        >
+                            <span className={userRating >= starNumber ? "text-yellow-400" : "text-gray-300"}>
+                                ★
+                            </span>
+                        </button>
+                    ))}
+                </div>
+
+                {userRating > 0 && (
+                    <p className="mt-2 text-green-600 font-medium">You rated this {userRating} stars!</p>
+                )}
+            </div>
+
+            {/* COMMENT SECTION */}
+            <div className="mt-12" id="comments-section">
+              <CommentSection recipeId={id} onCommentsLoaded={setCommentCount} />
+            </div>
           </div>
 
-          {/* Comment Section */}
-          <CommentSection recipeId="2oNIt5FdWkXwnRWcyj9i" />
+          {/* RIGHT COLUMN */}
+          <div className="md:col-span-1">
+            <div className="sticky top-8 space-y-8">
+              
+              {/* Ingredients Box */}
+              <div className="bg-[#D9D9D9] p-6 rounded-md shadow-sm">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-2xl font-serif">Ingredients</h2>
+                  <button
+                    onClick={() => setIsIngredientsOpen(!isIngredientsOpen)}
+                    className="text-2xl font-bold border-2 border-slate-700 px-2 rounded hover:bg-slate-300 transition"
+                  >
+                    {isIngredientsOpen ? "-" : "+"}
+                  </button>
+                </div>
+
+                {isIngredientsOpen && (
+                  <ul className="space-y-3">
+                    {recipe.ingredients?.map((ingredient, index) => (
+                      <li key={index} className="flex items-center gap-3">
+                        <div className="w-5 h-5 border-2 border-slate-700 rounded-sm shrink-0"></div>
+                        <span className="text-slate-800">{ingredient}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {/* Chatbot */}
+              <div>
+                {/* <Chatbot /> */}
+                [Chatbot Component Goes Here]
+              </div>
+              
+            </div>
+          </div>
         </div>
-
-        {/* RIGHT COLUMN */}
-        <div className="md:col-span-1">
-          {/* Ingredients Box */}
-          <div className="bg-[#D9D9D9] p-6 rounded-md shadow-sm sticky top-8">
-            {/* Ingredients checklist here */}
-            <h2 className="text-2xl font-serif text-center mb-6">
-              Ingredients
-            </h2>
-            <ul className="space-y-3">
-              {dummyRecipe.ingredients.map((ingredient, index) => (
-                <li key={index} className="flex items-center gap-3">
-                  <div className="w-5 h-5 border-2 border-slate-700 rounded-sm"></div>
-                  <span className="text-slate-800">{ingredient}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* CHATBOT */}
-          <div className="mt-8 p-4 border-2 border-dashed border-gray-400 text-center">
-            [Chatbot Component Goes Here]
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

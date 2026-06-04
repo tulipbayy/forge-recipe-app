@@ -1,5 +1,5 @@
 import express from 'express';
-import { db } from '../firebaseAdmin.js';
+import { admin, db } from '../firebaseAdmin.js';
 
 const router = express.Router();
 
@@ -62,6 +62,41 @@ router.get('/:id', async (req, res) => {
         return res.status(500).json({
             error: "Internal service error"
         });
+    }
+});
+
+// Add ratings
+router.post('/:id/rate', async (req, res) => {
+    const { id } = req.params;
+    const { rating } = req.body;
+    try {
+        const docRef = db.collection('recipes').doc(id);
+        
+         await db.runTransaction(async (transaction) => {
+            const doc = await transaction.get(docRef);
+            if (!doc.exists) throw new Error("Recipe not found!");
+            const data = doc.data();
+            const currentRatings = data.ratings || [];
+            const newRatingCount = data.ratingCount + 1;
+            
+            // Add the new rating to the list
+            const newRatings = [...currentRatings, rating];
+            
+            // Calculate the math average
+            const sum = newRatings.reduce((a, b) => a + b, 0);
+            const averageRating = (sum / newRatings.length).toFixed(1);
+
+            // Save both the new array AND the new average back to Firestore
+            transaction.update(docRef, {
+                ratings: newRatings,
+                averageRating: parseFloat(averageRating),
+                ratingCount: newRatingCount,
+            });
+        });
+        res.json({ message: "Rating saved and average calculated!" });
+    } catch (error) {
+        console.error("Failed to save rating:", error);
+        res.status(500).json({ error: "Failed to save rating" });
     }
 });
 
