@@ -3,17 +3,18 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { storage } from "../../public/firebase";
 import AppLayout from "../components/AppLayout.jsx";
-import CommentSection from "../components/CommentSection.jsx";
-import { API_BASE_URL } from "../services/api.js";
-import { getRecipes } from "../services/recipeService.js";
+import CommentSection from "../components/CommentSection";
+import Chatbot from "../components/Chatbot";
+import { useAuth } from "../context/AuthContext";
+import { getRecipeById } from "../services/recipeService";
 
 const fallbackRecipe = {
   title: "Spicy Garlic Butter Pasta",
   imageUrl:
-    "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?q=80&w=800&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?q=80&w=900&auto=format&fit=crop",
   category: "Dinner",
   description:
-    "A quick, 15-minute pasta dish coated in a rich, spicy garlic butter sauce. Perfect for a weeknight dinner.",
+    "A quick pasta dish coated in a rich garlic butter sauce. Perfect for a weeknight dinner.",
   ingredients: [
     "8 oz linguine or spaghetti",
     "4 tbsp unsalted butter",
@@ -23,24 +24,28 @@ const fallbackRecipe = {
     "1 tbsp fresh parsley, chopped",
   ],
   instructions: [
-    "Boil a large pot of salted water and cook the pasta until al dente.",
+    "Boil a large pot of salted water and cook pasta until al dente.",
     "Melt butter in a skillet over medium-low heat.",
     "Add garlic and red pepper flakes, then cook until fragrant.",
     "Toss pasta with the garlic butter and a splash of pasta water.",
     "Finish with parmesan and parsley, then serve immediately.",
   ],
+  averageRating: 4.5,
 };
 
 export default function RecipeDetail() {
   const { id, recipeId } = useParams();
   const [searchParams] = useSearchParams();
-  const resolvedRecipeId = recipeId || id;
+  const resolvedRecipeId = id || recipeId;
   const source = searchParams.get("source") || "community";
+  const { firebaseUser } = useAuth();
 
   const [recipe, setRecipe] = useState(fallbackRecipe);
   const [loading, setLoading] = useState(Boolean(resolvedRecipeId));
   const [uploadedImageUrl, setUploadedImageUrl] = useState("");
   const [isIngredientsOpen, setIsIngredientsOpen] = useState(true);
+  const [userRating, setUserRating] = useState(0);
+  const [commentCount, setCommentCount] = useState(0);
 
   useEffect(() => {
     if (!resolvedRecipeId) {
@@ -50,25 +55,29 @@ export default function RecipeDetail() {
 
     async function fetchRecipe() {
       try {
-        if (source === "community") {
-          const response = await fetch(`${API_BASE_URL}/recipes/${resolvedRecipeId}?source=${source}`);
-          const data = await response.json();
-          if (response.ok) {
-            setRecipe(data);
-          }
-        } else if (source === "official") {
-          // use local data for official recipes
-          const list = await getRecipes({ source: "official" });
-          const found = list.find((r) => r.recipeId === resolvedRecipeId);
-          if (found) setRecipe(found);
-        } else {
-          // default: try backend
-          const response = await fetch(`${API_BASE_URL}/recipes/${resolvedRecipeId}?source=${source}`);
-          const data = await response.json();
-          if (response.ok) setRecipe(data);
+        const localRecipe = await getRecipeById(resolvedRecipeId);
+        if (localRecipe) {
+          setRecipe({
+            ...fallbackRecipe,
+            ...localRecipe,
+            ingredients: localRecipe.ingredients || fallbackRecipe.ingredients,
+            instructions: localRecipe.instructions || fallbackRecipe.instructions,
+            averageRating: localRecipe.averageRating ?? localRecipe.rating ?? fallbackRecipe.averageRating,
+          });
+          setLoading(false);
+          return;
+        }
+
+        const response = await fetch(
+          `http://localhost:5001/api/recipes/${resolvedRecipeId}?source=${source}`
+        );
+        const data = await response.json();
+
+        if (response.ok) {
+          setRecipe({ ...fallbackRecipe, ...data });
         }
       } catch (error) {
-        console.error("Failed to load recipe", error);
+        console.error("Failed to load recipe detail:", error);
       } finally {
         setLoading(false);
       }
@@ -90,11 +99,50 @@ export default function RecipeDetail() {
     }
   }
 
+  async function handleRate(starNumber) {
+    setUserRating(starNumber);
+
+    if (!resolvedRecipeId) return;
+
+    try {
+      await fetch(`http://localhost:5001/api/recipes/${resolvedRecipeId}/rate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rating: starNumber }),
+      });
+    } catch (error) {
+      console.error("Failed to save rating:", error);
+    }
+  }
+
+  async function handleSaveRecipe() {
+    if (!firebaseUser) {
+      alert("Please log in to save recipes.");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:5001/api/savedRecipes/${firebaseUser.uid}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ recipeId: resolvedRecipeId }),
+        }
+      );
+
+      alert(response.ok ? "Recipe saved successfully." : "Failed to save recipe.");
+    } catch (error) {
+      console.error("Error saving recipe:", error);
+      alert("Error saving recipe.");
+    }
+  }
+
   if (loading) {
     return (
       <AppLayout>
-        <main className="mint-page simple-page">
-          <p>Loading Recipe...</p>
+        <main className="min-h-screen bg-[#E8F3EB] p-8 text-center font-serif text-2xl">
+          Loading Recipe...
         </main>
       </AppLayout>
     );
@@ -102,76 +150,122 @@ export default function RecipeDetail() {
 
   return (
     <AppLayout>
-      <main className="mint-page detail-page">
-        <Link to="/recipes" className="return-link">
-          &larr; return
-        </Link>
+      <main className="min-h-screen bg-[#E8F3EB] p-6 text-slate-800 md:p-8">
+        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 md:grid-cols-3">
+          <section className="space-y-6 md:col-span-2">
+            <Link to="/recipes" className="inline-block rounded bg-[#f4dfdc] px-3 py-1 font-serif">
+              &larr; return
+            </Link>
 
-        <section className="detail-layout">
-          <article className="detail-main">
-            <h1>{recipe.title}</h1>
-            <div className="detail-actions">
-              <button type="button">Save Recipe</button>
-              <span>Rating: {recipe.averageRating || recipe.rating || "4.5"}/5</span>
-              <a href="#comments-section">Comments</a>
-            </div>
+          <h1 className="text-center font-serif text-4xl text-slate-800 md:text-5xl">
+            {recipe.title}
+          </h1>
 
-            <img className="detail-image" src={recipe.imageUrl} alt={recipe.title} />
+          <div className="flex flex-wrap items-center justify-center gap-6 font-medium text-slate-700">
+            <button type="button" onClick={handleSaveRecipe}>
+              + Save Recipe
+            </button>
+            <span>Rating: {recipe.averageRating || recipe.rating || "New"}/5</span>
+            <a href="#comments-section">{commentCount} Comment(s)</a>
+          </div>
 
-            <label className="upload-button">
+          <img
+            src={recipe.imageUrl}
+            alt={recipe.title}
+            className="aspect-video w-full rounded-xl object-cover shadow-lg"
+          />
+
+          <div className="text-center">
+            <label className="inline-block cursor-pointer rounded-md bg-slate-800 px-4 py-2 text-white hover:bg-slate-700">
               Upload Photo
-              <input type="file" accept="image/*" onChange={handleUpload} />
+              <input type="file" className="hidden" accept="image/*" onChange={handleUpload} />
             </label>
+          </div>
 
-            {uploadedImageUrl && (
-              <div className="uploaded-photo">
-                <p>Your Uploaded Photo:</p>
-                <img src={uploadedImageUrl} alt="Uploaded recipe" />
-              </div>
-            )}
-
-            <section className="detail-panel">
-              <h2>Tags</h2>
-              <p>{recipe.category}</p>
-
-              <h2>Description</h2>
-              <p>{recipe.description}</p>
-
-              <h2>Instructions</h2>
-              <ol>
-                {recipe.instructions?.map((step, index) => (
-                  <li key={index}>{step}</li>
-                ))}
-              </ol>
-            </section>
-
-            <section id="comments-section">
-              <CommentSection recipeId={resolvedRecipeId || "demo-recipe"} />
-            </section>
-          </article>
-
-          <aside className="ingredients-panel">
-            <div className="ingredients-heading">
-              <h2>Ingredients</h2>
-              <button type="button" onClick={() => setIsIngredientsOpen((isOpen) => !isOpen)}>
-                {isIngredientsOpen ? "-" : "+"}
-              </button>
+          {uploadedImageUrl && (
+            <div className="text-center">
+              <p className="font-semibold">Your Uploaded Photo:</p>
+              <img
+                src={uploadedImageUrl}
+                alt="Uploaded recipe"
+                className="mx-auto mt-2 w-48 rounded-lg shadow-md"
+              />
             </div>
+          )}
 
-            {isIngredientsOpen && (
-              <ul>
-                {recipe.ingredients?.map((ingredient, index) => (
-                  <li key={index}>
-                    <span aria-hidden="true" />
-                    {ingredient}
-                  </li>
-                ))}
-              </ul>
-            )}
+          <section className="rounded-lg bg-white p-6 shadow-sm">
+            <h2 className="font-serif text-3xl text-slate-800">Tags</h2>
+            <p className="mt-2">{recipe.category}</p>
 
-            <div className="chatbot-placeholder">Chatbot Component Goes Here</div>
-          </aside>
+            <h2 className="mt-8 font-serif text-3xl text-slate-800">Description</h2>
+            <p className="mt-2">{recipe.description}</p>
+
+            <h2 className="mt-8 font-serif text-3xl text-slate-800">Instructions</h2>
+            <ol className="mt-4 list-decimal space-y-3 pl-6 text-lg text-slate-700">
+              {recipe.instructions?.map((step, index) => (
+                <li key={index}>{step}</li>
+              ))}
+            </ol>
+          </section>
+
+          <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="mb-3 font-serif text-xl text-slate-800">Rate this recipe:</h3>
+            <div className="flex gap-2">
+              {[1, 2, 3, 4, 5].map((starNumber) => (
+                <button
+                  key={starNumber}
+                  type="button"
+                  onClick={() => handleRate(starNumber)}
+                  className="text-4xl transition hover:scale-110"
+                >
+                  <span className={userRating >= starNumber ? "text-yellow-400" : "text-gray-300"}>
+                    ★
+                  </span>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section id="comments-section">
+            <CommentSection
+              recipeId={resolvedRecipeId || "demo-recipe"}
+              onCommentsLoaded={setCommentCount}
+            />
+          </section>
         </section>
+
+        <aside className="md:col-span-1">
+          <div className="sticky top-8 space-y-8">
+            <section className="rounded-md bg-[#D9D9D9] p-6 shadow-sm">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="font-serif text-2xl">Ingredients</h2>
+                <button
+                  type="button"
+                  onClick={() => setIsIngredientsOpen((open) => !open)}
+                  className="rounded border-2 border-slate-700 px-2 text-2xl font-bold"
+                >
+                  {isIngredientsOpen ? "-" : "+"}
+                </button>
+              </div>
+
+              {isIngredientsOpen && (
+                <ul className="space-y-3">
+                  {recipe.ingredients?.map((ingredient, index) => (
+                    <li key={index}>
+                      <label className="flex cursor-pointer items-center gap-3">
+                        <input type="checkbox" className="h-5 w-5" />
+                        <span>{ingredient}</span>
+                      </label>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            <Chatbot recipe={recipe} />
+          </div>
+          </aside>
+        </div>
       </main>
     </AppLayout>
   );

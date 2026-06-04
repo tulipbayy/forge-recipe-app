@@ -29,5 +29,6 @@ if (serviceAccount) {
 }
 
 export const firebaseAdminReady = Boolean(serviceAccount);
+export { admin };
 export const db = firebaseAdminReady ? admin.firestore() : null;
 export const auth = firebaseAdminReady ? admin.auth() : null;

@@ -27,9 +27,14 @@ export default function Recipes() {
 
   const sortedRecipes = useMemo(() => {
     return [...recipes].sort((a, b) => {
-      if (sortBy === "rating") return b.rating - a.rating;
+      const ratingA = a.averageRating ?? a.rating ?? 0;
+      const ratingB = b.averageRating ?? b.rating ?? 0;
+      const ratingCountA = a.ratingCount ?? 0;
+      const ratingCountB = b.ratingCount ?? 0;
+
+      if (sortBy === "rating") return ratingB - ratingA;
       if (sortBy === "newest") return b.recipeId.localeCompare(a.recipeId);
-      return b.ratingCount - a.ratingCount;
+      return ratingCountB - ratingCountA;
     });
   }, [recipes, sortBy]);
 
