@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
+import rateLimit from 'express-rate-limit';
 
 dotenv.config();
 const router = express.Router();
@@ -15,7 +16,14 @@ const port = 5001;
 
 router.use(bodyParser.json());
 
-router.post('/', async (req, res) => {
+// to limit amount of questions user can ask the assistant
+const chatLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minute
+    max: 5, // Limit each user to 5 requests per minute
+    message: { error: "You are sending too many chats! Please wait a minute." }
+});
+
+router.post('/', chatLimiter, async (req, res) => {
     const { history, recipe } = req.body;
     try {
         const systemMessage = {
