@@ -3,9 +3,13 @@ import cors from "cors";
 import "dotenv/config";
 import recipeRoutes from "./routes/recipes.js";
 import commentsRouter from "./routes/comments.js";
+import chatRouter from './routes/chatbot.js';
+import adminRoutes from './routes/admin.js';
+
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use('/api/admin', adminRoutes);
 
 app.use("/api/recipes", recipeRoutes);
 
@@ -17,6 +21,7 @@ app.get("/api/ping", (req, res) => {
 });
 
 app.use("/api", commentsRouter);
+app.use('/api/chat', chatRouter);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
