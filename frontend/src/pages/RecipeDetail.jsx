@@ -232,8 +232,20 @@ export default function RecipeDetail() {
                   <ul className="space-y-3">
                     {recipe.ingredients?.map((ingredient, index) => (
                       <li key={index} className="flex items-center gap-3">
-                        <div className="w-5 h-5 border-2 border-slate-700 rounded-sm shrink-0"></div>
-                        <span className="text-slate-800">{ingredient}</span>
+                        <label className="flex items-center gap-3 cursor-pointer group">
+                            {/* Hidden checkbox */}
+                            <input type="checkbox" className="peer hidden" />
+                            
+                            {/* The visible custom box */}
+                            <div className="w-6 h-6 border-2 border-slate-400 rounded flex items-center justify-center peer-checked:bg-slate-800 peer-checked:border-slate-800 transition-colors">
+                                <span className="text-white opacity-0 peer-checked:opacity-100 font-bold">✓</span>
+                            </div>
+                            
+                            {/* The text (adds a strikethrough) */}
+                            <span className="text-slate-800 peer-checked:line-through peer-checked:text-slate-400 transition-all">
+                                {ingredient}
+                            </span>
+                        </label>
                       </li>
                     ))}
                   </ul>
