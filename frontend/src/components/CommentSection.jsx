@@ -7,7 +7,7 @@ import {
   toggleUpvote,
 } from "../services/api";
 
-export default function CommentSection({ recipeId }) {
+export default function CommentSection({ recipeId, onCommentsLoaded }) {
   const { firebaseUser, userDoc } = useAuth();
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,6 +30,13 @@ export default function CommentSection({ recipeId }) {
       }
     })();
   }, [recipeId]);
+
+  // Count number of comments to pass to RecipeDetail
+  useEffect(() => {
+    if (onCommentsLoaded) {
+      onCommentsLoaded(comments.length);
+    }
+  }, [comments, onCommentsLoaded]);
 
   async function handlePost(e) {
     e.preventDefault();

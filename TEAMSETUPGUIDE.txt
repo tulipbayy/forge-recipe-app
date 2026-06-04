@@ -30,6 +30,7 @@ Create a .env file in backend/, format it like this (I set it to Edamam for now,
 EDAMAM_APP_ID="..."
 EDAMAM_APP_KEY="..."
 EDAMAM_ACCOUNT_USER="..."
+OPENAI_API_KEY="..."
 
 *I invited you as users for the API, let me know if you didn't get the invite.
 
