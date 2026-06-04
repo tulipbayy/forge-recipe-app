@@ -5,6 +5,7 @@ import recipeRoutes from "./routes/recipes.js";
 import commentsRouter from "./routes/comments.js";
 import chatRouter from './routes/chatbot.js';
 import adminRoutes from './routes/admin.js';
+import savedRecipeRoutes from './routes/savedRecipes.js';
 
 const app = express();
 app.use(cors());
@@ -22,6 +23,7 @@ app.get("/api/ping", (req, res) => {
 
 app.use("/api", commentsRouter);
 app.use('/api/chat', chatRouter);
+app.use('/api/savedRecipes', savedRecipeRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

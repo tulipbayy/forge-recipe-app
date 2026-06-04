@@ -1,10 +1,11 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { storage } from "../../public/firebase";
+import { storage, auth } from "../../public/firebase";
 import { useParams, useSearchParams } from 'react-router-dom';
 import CommentSection from "../components/CommentSection";
-// import Chatbot from "../components/Chatbot";
+import Chatbot from "../components/Chatbot";
+import { useAuth } from "../context/AuthContext";
 
 const dummyRecipe = {
   title: "Spicy Garlic Butter Pasta",
@@ -42,6 +43,7 @@ export default function RecipeDetail() {
     const [isIngredientsOpen, setIsIngredientsOpen] = useState(true);
     const [userRating, setUserRating] = useState(0);
     const [commentCount, setCommentCount] = useState(0);
+    const { firebaseUser } = useAuth();
 
     // get data from backend
     useEffect(() => {
@@ -117,6 +119,29 @@ export default function RecipeDetail() {
     }
   };
 
+   const handleSaveRecipe = async () => {
+      // Security check
+      if (!firebaseUser) {
+          alert("Please log in to save recipes!");
+          return;
+      }
+      try {
+          const response = await fetch(`http://localhost:5001/api/savedRecipes/${firebaseUser.uid}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ recipeId: id }),
+          });
+          if (response.ok) {
+              alert("Recipe saved successfully! You can view it in My Recipes.");
+          } else {
+              alert("Failed to save recipe.");
+          }
+      } catch (error) {
+          console.error("Error saving recipe:", error);
+          alert("Error saving recipe.");
+      }
+  };
+
     return ( 
       <div className="min-h-screen bg-[#E8F3EB] p-8 font-sans text-gray-800">
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12">
@@ -133,8 +158,8 @@ export default function RecipeDetail() {
 
             {/* Action Buttons */}
             <div className="flex flex-wrap justify-center items-center gap-6 mt-4 text-slate-700 font-medium">
-              <button className="flex items-center gap-2 hover:text-slate-900 transition">
-                <span className="text-xl">⊕</span> Save Recipe
+              <button onClick={handleSaveRecipe} className="flex items-center gap-2 hover:text-slate-900 transition">
+                  <span className="text-xl">⊕</span> Save Recipe
               </button>
               <div className="flex items-center gap-2">
                 <span className="text-xl">★</span> Rating: {recipe.averageRating ? recipe.averageRating : "New"}/5.0
@@ -214,7 +239,7 @@ export default function RecipeDetail() {
 
           {/* RIGHT COLUMN */}
           <div className="md:col-span-1">
-            <div className="sticky top-8 space-y-8">
+            <div className="sticky top-8 space-y-8 max-h-[calc(100vh-4rem)] overflow-y-auto pb-4 pr-8">
               
               {/* Ingredients Box */}
               <div className="bg-[#D9D9D9] p-6 rounded-md shadow-sm">
@@ -254,8 +279,7 @@ export default function RecipeDetail() {
 
               {/* Chatbot */}
               <div>
-                {/* <Chatbot /> */}
-                [Chatbot Component Goes Here]
+                <Chatbot recipe={recipe} />
               </div>
               
             </div>
