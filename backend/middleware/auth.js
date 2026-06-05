@@ -1,6 +1,13 @@
 import { auth } from "../firebaseAdmin.js";
 
 export async function requireAuth(req, res, next) {
+  if (!auth) {
+    return res.status(503).json({
+      error:
+        "Firebase Admin is not configured. Add backend/serviceAccountKey.json or FIREBASE_SERVICE_ACCOUNT in backend/.env.",
+    });
+  }
+
   try {
     const header = req.headers.authorization;
     if (!header || !header.startsWith("Bearer ")) {

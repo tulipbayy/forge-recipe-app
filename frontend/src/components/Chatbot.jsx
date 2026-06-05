@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { API_BASE_URL } from "../services/api";
 
 export default function Chatbot({ recipe }) {
     const [input, setInput] = useState("");
@@ -19,7 +20,7 @@ export default function Chatbot({ recipe }) {
         setIsLoading(true);
 
         try {
-            const response = await fetch("http://localhost:5001/api/chat", {
+            const response = await fetch(`${API_BASE_URL}/chat`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ 
@@ -28,10 +29,14 @@ export default function Chatbot({ recipe }) {
                 })
             });
             const data = await response.json();
-            
-            if (data.reply) {
-                setMessages(prev => [...prev, { role: "assistant", content: data.reply }]);
-            }
+
+            setMessages(prev => [
+                ...prev,
+                {
+                    role: "assistant",
+                    content: data.reply || data.error || "Sorry, I could not answer that question yet.",
+                },
+            ]);
         } catch (error) {
             console.error("Chat error:", error);
             setMessages(prev => [...prev, { role: "assistant", content: "Sorry, I lost connection to the server!" }]);

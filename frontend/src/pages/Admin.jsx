@@ -1,21 +1,40 @@
 import React, { useState, useEffect } from "react";
+import { Navigate } from "react-router-dom";
+import { API_BASE_URL } from "../services/api";
+import { useAuth } from "../context/AuthContext";
 
 export default function Admin() {
+    const { firebaseUser, userDoc, loading: authLoading } = useAuth();
     const [pendingRecipes, setPendingRecipes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        fetchPendingRecipes();
-    }, []);
+        if (!authLoading && firebaseUser && userDoc?.isAdmin) {
+            fetchPendingRecipes();
+        }
+    }, [authLoading, firebaseUser, userDoc?.isAdmin]);
+
+    async function authHeaders() {
+        if (!firebaseUser) return {};
+        const token = await firebaseUser.getIdToken();
+        return { Authorization: `Bearer ${token}` };
+    }
 
     const fetchPendingRecipes = async () => {
         try {
-            const response = await fetch("http://localhost:5001/api/admin/pending");
+            const response = await fetch(`${API_BASE_URL}/admin/pending`, {
+                headers: await authHeaders(),
+            });
             const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Failed to load pending recipes");
+            }
+
             setPendingRecipes(data);
         } catch (err) {
-            setError("Fail to load pending recipes");
+            setError(err.message || "Failed to load pending recipes");
         } finally {
             setLoading(false);
         }
@@ -23,9 +42,11 @@ export default function Admin() {
 
     const handleApprove = async (id) => {
         try {
-            await fetch(`http://localhost:5001/api/admin/${id}/approve`, {
+            const response = await fetch(`${API_BASE_URL}/admin/${id}/approve`, {
                 method: "PATCH",
+                headers: await authHeaders(),
             });
+            if (!response.ok) throw new Error("Failed to approve recipe");
             setPendingRecipes((prev) => prev.filter((r) => r.id !== id));
         } catch (err) {
             console.error("Failed to approve recipe", err);
@@ -34,21 +55,27 @@ export default function Admin() {
 
     const handleReject = async (id) => {
         try {
-            await fetch(`http://localhost:5001/api/admin/${id}/reject`, {
+            const response = await fetch(`${API_BASE_URL}/admin/${id}/reject`, {
                 method: "PATCH",
+                headers: await authHeaders(),
             });
+            if (!response.ok) throw new Error("Failed to reject recipe");
             setPendingRecipes((prev) => prev.filter((r) => r.id !== id));
         } catch (err) {
             console.error("Failed to reject recipe", err);
         }
     };
 
-    if (loading) {
+    if (authLoading || (firebaseUser && userDoc?.isAdmin && loading)) {
         return (
             <div className="min-h-screen bg-[#E8F3EB] flex items-center justify-center">
                 <p className="text-slate-600">Loading pending recipes...</p>
             </div>
         );
+    }
+
+    if (!firebaseUser || userDoc?.isAdmin !== true) {
+        return <Navigate to="/recipes" replace />;
     }
 
     if (error) {

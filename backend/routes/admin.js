@@ -1,7 +1,32 @@
 import express from 'express';
 import { db } from '../firebaseAdmin.js';
+import { requireAuth } from "../middleware/auth.js";
 
 const router = express.Router();
+
+router.use(requireAuth);
+
+async function requireAdmin(req, res, next) {
+    try {
+        if (!db) {
+            return res.status(503).json({
+                error: "Firebase Admin is not configured. Add backend/serviceAccountKey.json or FIREBASE_SERVICE_ACCOUNT in backend/.env.",
+            });
+        }
+
+        const userDoc = await db.collection("users").doc(req.user.userId).get();
+        if (!userDoc.exists || userDoc.data().isAdmin !== true) {
+            return res.status(403).json({ error: "Admin access required" });
+        }
+
+        next();
+    } catch (err) {
+        console.error("Admin authorization failed:", err);
+        res.status(500).json({ error: "Failed to verify admin access" });
+    }
+}
+
+router.use(requireAdmin);
 
 // get all pending recipes 
 router.get('/pending', async (req, res) => {
@@ -51,4 +76,3 @@ router.patch('/:id/reject', async(req, res) => {
 });
 
 export default router;
-

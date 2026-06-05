@@ -1,19 +1,22 @@
-import { Routes, Route } from "react-router-dom";
-import RecipeDetail from "./pages/RecipeDetail";
-import CreateRecipe from "./pages/CreateRecipe";
-import Admin from "./pages/Admin";
-import Home from "./pages/Home";
+import { Navigate, Route, Routes } from "react-router-dom";
+import Home from "./pages/Home.jsx";
+import Recipes from "./pages/Recipes.jsx";
+import MyRecipes from "./pages/MyRecipes.jsx";
+import CreateRecipe from "./pages/CreateRecipe.jsx";
+import RecipeDetail from "./pages/RecipeDetail.jsx";
+import Admin from "./pages/Admin.jsx";
 
-function App() {
+export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-      <Route path="/create-recipe" element={<CreateRecipe />} />
+      <Route path="/recipes" element={<Recipes />} />
+      <Route path="/recipes/:recipeId" element={<RecipeDetail />} />
       <Route path="/recipe/:id" element={<RecipeDetail />} />
+      <Route path="/my-recipes" element={<MyRecipes />} />
+      <Route path="/create-recipe" element={<CreateRecipe />} />
       <Route path="/admin" element={<Admin />} />
-      <Route path="*" element={<RecipeDetail />} />
+      <Route path="*" element={<Navigate to="/recipes" replace />} />
     </Routes>
   );
 }
-
-export default App;

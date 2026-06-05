@@ -7,6 +7,12 @@ router.post('/:uid', async (req, res) => {
     const { uid } = req.params;
     const { recipeId } = req.body;
     try {
+        if (!db) {
+            return res.status(503).json({
+                error: "Firebase Admin is not configured. Add backend/serviceAccountKey.json or FIREBASE_SERVICE_ACCOUNT in backend/.env."
+            });
+        }
+
         const userRef = db.collection('users').doc(uid);
         
         await userRef.set({
