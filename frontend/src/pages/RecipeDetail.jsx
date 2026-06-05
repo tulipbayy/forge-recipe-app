@@ -64,7 +64,7 @@ export default function RecipeDetail() {
           return;
         }
         const response = await fetch(
-          `http://localhost:5001/api/recipes/${resolvedRecipeId}?source=${source}`
+          `${import.meta.env.VITE_BASE_URL || `${import.meta.env.VITE_BASE_URL || 'http://localhost:5001'}`}/api/recipes/${resolvedRecipeId}?source=${source}`
         );
         const data = await response.json();
         if (response.ok) {
@@ -98,7 +98,7 @@ export default function RecipeDetail() {
     setUserRating(starNumber);
     if (!resolvedRecipeId) return;
     try {
-      await fetch(`http://localhost:5001/api/recipes/${resolvedRecipeId}/rate`, {
+      await fetch(`${import.meta.env.VITE_BASE_URL || `${import.meta.env.VITE_BASE_URL || 'http://localhost:5001'}`}/api/recipes/${resolvedRecipeId}/rate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rating: starNumber }),
@@ -114,7 +114,7 @@ export default function RecipeDetail() {
     }
     try {
       const response = await fetch(
-        `http://localhost:5001/api/savedRecipes/${firebaseUser.uid}`,
+        `${import.meta.env.VITE_BASE_URL || `${import.meta.env.VITE_BASE_URL || 'http://localhost:5001'}`}/api/savedRecipes/${firebaseUser.uid}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
