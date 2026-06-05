@@ -32,7 +32,7 @@ export default function Navbar({ onMenuClick }) {
           &#9776;
         </button>
         <NavLink to="/" className="brand">
-          Recipe App
+          Recipefy
         </NavLink>
       </div>
       <nav aria-label="Primary navigation">
