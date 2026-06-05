@@ -1,15 +1,25 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import Navbar from "./Navbar.jsx";
+import { useAuth } from "../context/AuthContext";
 
 export default function AppLayout({ children }) {
   const [isSideNavOpen, setIsSideNavOpen] = useState(false);
+  const { userDoc } = useAuth();
 
   return (
     <div className="app-frame">
       <Navbar onMenuClick={() => setIsSideNavOpen(true)} />
-      <div className={`side-drawer ${isSideNavOpen ? "open" : ""}`} aria-hidden={!isSideNavOpen}>
-        <button type="button" className="drawer-close" onClick={() => setIsSideNavOpen(false)} aria-label="Close navigation menu">
+      <div
+        className={`side-drawer ${isSideNavOpen ? "open" : ""}`}
+        aria-hidden={!isSideNavOpen}
+      >
+        <button
+          type="button"
+          className="drawer-close"
+          onClick={() => setIsSideNavOpen(false)}
+          aria-label="Close navigation menu"
+        >
           &times;
         </button>
         <nav aria-label="Side navigation">
@@ -25,9 +35,24 @@ export default function AppLayout({ children }) {
           <NavLink to="/create-recipe" onClick={() => setIsSideNavOpen(false)}>
             Create Recipe
           </NavLink>
+          {userDoc?.isAdmin && (
+            <>
+              <p className="sidebar-section-label">Admin only</p>
+              <NavLink to="/admin" onClick={() => setIsSideNavOpen(false)}>
+                Review
+              </NavLink>
+            </>
+          )}
         </nav>
       </div>
-      {isSideNavOpen && <button type="button" className="drawer-backdrop" onClick={() => setIsSideNavOpen(false)} aria-label="Close navigation menu" />}
+      {isSideNavOpen && (
+        <button
+          type="button"
+          className="drawer-backdrop"
+          onClick={() => setIsSideNavOpen(false)}
+          aria-label="Close navigation menu"
+        />
+      )}
       {children}
     </div>
   );

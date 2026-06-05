@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { API_BASE_URL } from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import AppLayout from "../components/AppLayout";
 
 export default function Admin() {
   const { firebaseUser, userDoc, loading: authLoading } = useAuth();
@@ -151,6 +152,7 @@ export default function Admin() {
   }
 
   return (
+    <AppLayout>
     <div className="min-h-screen bg-[#E8F3EB] p-8 font-sans text-gray-800">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
@@ -275,5 +277,6 @@ export default function Admin() {
         )}
       </div>
     </div>
+    </AppLayout>
   );
 }
