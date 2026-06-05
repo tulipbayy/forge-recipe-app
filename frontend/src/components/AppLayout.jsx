@@ -23,21 +23,60 @@ export default function AppLayout({ children }) {
           &times;
         </button>
         <nav aria-label="Side navigation">
-          <NavLink to="/" onClick={() => setIsSideNavOpen(false)}>
+          <NavLink
+            to="/"
+            onClick={() => setIsSideNavOpen(false)}
+            className={({ isActive }) =>
+              `block px-3 py-2 rounded-lg transition-colors duration-150 ${
+                isActive
+                  ? "bg-[#D2E3D9] text-[#2C5A5A] font-medium"
+                  : "hover:bg-[#E3F3E9]"
+              }`
+            }
+          >
             Home
           </NavLink>
-          <NavLink to="/recipes" onClick={() => setIsSideNavOpen(false)}>
+          <NavLink
+            to="/recipes"
+            onClick={() => setIsSideNavOpen(false)}
+            className={({ isActive }) =>
+              `block px-3 py-2 rounded-lg transition-colors duration-150 ${
+                isActive
+                  ? "bg-[#D2E3D9] text-[#2C5A5A] font-medium"
+                  : "hover:bg-[#E3F3E9]"
+              }`
+            }
+          >
             Recipes
           </NavLink>
-          <NavLink to="/my-recipes" onClick={() => setIsSideNavOpen(false)}>
+          <NavLink
+            to="/my-recipes"
+            onClick={() => setIsSideNavOpen(false)}
+            className={({ isActive }) =>
+              `block px-3 py-2 rounded-lg transition-colors duration-150 ${
+                isActive
+                  ? "bg-[#D2E3D9] text-[#2C5A5A] font-medium"
+                  : "hover:bg-[#E3F3E9]"
+              }`
+            }
+          >
             My Recipes
           </NavLink>
-          <NavLink to="/create-recipe" onClick={() => setIsSideNavOpen(false)}>
+          <NavLink
+            to="/create-recipe"
+            onClick={() => setIsSideNavOpen(false)}
+            className={({ isActive }) =>
+              `block px-3 py-2 rounded-lg transition-colors duration-150 ${
+                isActive
+                  ? "bg-[#D2E3D9] text-[#2C5A5A] font-medium"
+                  : "hover:bg-[#E3F3E9]"
+              }`
+            }
+          >
             Create Recipe
           </NavLink>
           {userDoc?.isAdmin && (
             <>
-              <p className="sidebar-section-label">Admin only</p>
               <NavLink to="/admin" onClick={() => setIsSideNavOpen(false)}>
                 Review
               </NavLink>
