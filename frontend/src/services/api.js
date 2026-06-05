@@ -55,6 +55,22 @@ export async function deleteComment(commentId) {
   if (!res.ok) throw new Error("Failed to delete comment");
 }
 
+export async function createRecipe(recipe) {
+  const res = await fetch(`${API_BASE}/recipes`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders()),
+    },
+    body: JSON.stringify(recipe),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || "Failed to create recipe");
+  }
+  return res.json();
+}
+
 export async function toggleUpvote(commentId) {
   const res = await fetch(`${API_BASE_URL}/comments/${commentId}/upvote`, {
     method: "POST",
