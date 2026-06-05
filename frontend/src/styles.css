@@ -185,6 +185,104 @@ a {
   background: var(--mint);
 }
 
+.home-page {
+  padding: clamp(30px, 5vw, 54px) clamp(22px, 5vw, 56px) clamp(48px, 6vw, 72px);
+}
+
+.home-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  width: min(1120px, 100%);
+  margin: 0 auto;
+}
+
+.home-kicker {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.home-header h1 {
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(2.2rem, 5vw, 4rem);
+  text-transform: capitalize;
+}
+
+.home-share {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.home-search {
+  width: min(760px, 100%);
+  margin: 36px auto 0;
+  padding: clamp(24px, 4vw, 36px);
+  border-radius: 14px;
+  background: var(--paper);
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+.home-search h2,
+.section-heading h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(1.35rem, 3vw, 2rem);
+}
+
+.home-search .search-bar {
+  margin-top: 18px;
+}
+
+.home-recipes {
+  width: min(1220px, 100%);
+  margin: 38px auto 0;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.text-button {
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.recipe-skeleton {
+  min-height: 300px;
+  border-radius: 10px;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.55)),
+    #dce9df;
+  background-size: 200% 100%;
+  box-shadow: var(--shadow);
+  animation: shimmer 1.2s infinite linear;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+
+  to {
+    background-position: -200% 0;
+  }
+}
+
 .recipe-page {
   padding: clamp(18px, 3vw, 28px) clamp(22px, 4vw, 42px) clamp(44px, 6vw, 64px);
 }
@@ -726,6 +824,16 @@ button.return-link {
 
   .mint-page {
     min-height: calc(100vh - 66px);
+  }
+
+  .home-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .home-share {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .side-drawer {
