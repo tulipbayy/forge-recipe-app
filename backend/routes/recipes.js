@@ -36,7 +36,7 @@ function normalizeEdamamRecipe(hit) {
     averageRating: null,
   };
 }
-async function fetchOfficialRecipes(query = "popular", limit = 8) {
+async function fetchOfficialRecipes(query = "popular", limit = 20) {
   if (process.env.EDAMAM_APP_ID && process.env.EDAMAM_APP_KEY) {
     try {
       const url = `https://api.edamam.com/api/recipes/v2?type=public&app_id=${
@@ -72,7 +72,7 @@ async function fetchCommunityRecipes() {
   const snapshot = await db
     .collection("recipes")
     .where("approved", "==", true)
-    .limit(8)
+    .limit(20)
     .get();
   return snapshot.docs.map((doc) => ({
     recipeId: doc.id,

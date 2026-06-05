@@ -78,6 +78,11 @@ export default function RecipeDetail() {
     }
     fetchRecipe();
   }, [resolvedRecipeId, source]);
+
+   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+  
   async function handleUpload(event) {
     const file = event.target.files?.[0];
     if (!file) return;
