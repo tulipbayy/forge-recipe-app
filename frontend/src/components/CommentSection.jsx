@@ -48,7 +48,7 @@ export default function CommentSection({ recipeId, onCommentsLoaded }) {
       setNewText("");
     } catch (err) {
       console.error(err);
-      alert("Failed to post comment");
+      alert(err.message || "Failed to post comment");
     } finally {
       setSubmitting(false);
     }
@@ -63,7 +63,7 @@ export default function CommentSection({ recipeId, onCommentsLoaded }) {
       setReplyingTo(null);
     } catch (err) {
       console.error(err);
-      alert("Failed to post reply");
+      alert(err.message || "Failed to post reply");
     }
   }
 

@@ -39,6 +39,13 @@ router.get("/recipes/:recipeId/comments", requireFirebaseAdmin, async (req, res)
 
 router.post("/recipes/:recipeId/comments", requireAuth, async (req, res) => {
   try {
+    if (!db) {
+      return res.status(503).json({
+        error:
+          "Firebase Admin is not configured. Add backend/serviceAccountKey.json or FIREBASE_SERVICE_ACCOUNT in backend/.env.",
+      });
+    }
+
     const { recipeId } = req.params;
     const { text, parentCommentId = null } = req.body;
     const userId = req.user.userId;
@@ -47,17 +54,26 @@ router.post("/recipes/:recipeId/comments", requireAuth, async (req, res) => {
       return res.status(400).json({ error: "Comment text is required" });
     }
 
-    // Recipe must exist
-    const recipeDoc = await db.collection("recipes").doc(recipeId).get();
-    if (!recipeDoc.exists) {
-      return res.status(404).json({ error: "Recipe not found" });
+    const userRef = db.collection("users").doc(userId);
+    const userDoc = await userRef.get();
+    const fallbackUser = {
+      userId,
+      username: req.user.username,
+      email: req.user.email || null,
+      profilePicture: req.user.profilePicture || "",
+      isAdmin: false,
+    };
+
+    if (!userDoc.exists) {
+      await userRef.set({
+        ...fallbackUser,
+        createdAt: FieldValue.serverTimestamp(),
+      });
     }
 
-    const userDoc = await db.collection("users").doc(userId).get();
-    if (!userDoc.exists) {
-      return res.status(404).json({ error: "User not found" });
-    }
-    const { username = "", profilePicture = "" } = userDoc.data();
+    const { username, profilePicture } = userDoc.exists
+      ? { ...fallbackUser, ...userDoc.data() }
+      : fallbackUser;
 
     if (parentCommentId) {
       const parentDoc = await db

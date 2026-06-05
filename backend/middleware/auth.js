@@ -22,6 +22,8 @@ export async function requireAuth(req, res, next) {
     req.user = {
       userId: decoded.uid, // matches users.userId in schema
       email: decoded.email,
+      username: decoded.name || decoded.email?.split("@")[0] || "User",
+      profilePicture: decoded.picture || "",
     };
 
     next();

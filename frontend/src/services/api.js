@@ -43,7 +43,10 @@ export async function postComment(recipeId, text, parentCommentId = null) {
     },
     body: JSON.stringify({ text, parentCommentId }),
   });
-  if (!res.ok) throw new Error("Failed to post comment");
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || "Failed to post comment");
+  }
   return res.json();
 }
 
@@ -56,7 +59,7 @@ export async function deleteComment(commentId) {
 }
 
 export async function createRecipe(recipe) {
-  const res = await fetch(`${API_BASE}/recipes`, {
+  const res = await fetch(`${API_BASE_URL}/recipes`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
