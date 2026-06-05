@@ -164,6 +164,7 @@ router.post("/", requireAuth, async (req, res) => {
       ratingCount: 0,
       averageRating: null,
       createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     });
 
     const created = await ref.get();

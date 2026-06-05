@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "../../public/firebase";
+import AppLayout from "../components/AppLayout.jsx";
 import { useAuth } from "../context/AuthContext";
 import { createRecipe } from "../services/api";
 
@@ -85,7 +86,8 @@ export default function CreateRecipe() {
   };
 
   return (
-    <div className="min-h-screen bg-[#E8F3EB] p-8">
+    <AppLayout>
+    <main className="min-h-screen bg-[#E8F3EB] p-8">
       <div className="max-w-6xl mx-auto space-y-8">
         <h1 className="text-4xl font-serif text-slate-800">Create Recipe</h1>
 
@@ -172,6 +174,7 @@ export default function CreateRecipe() {
           </div>
         </form>
       </div>
-    </div>
+    </main>
+    </AppLayout>
   );
 }

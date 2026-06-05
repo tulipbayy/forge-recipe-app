@@ -56,7 +56,7 @@ export async function deleteComment(commentId) {
 }
 
 export async function createRecipe(recipe) {
-  const res = await fetch(`${API_BASE}/recipes`, {
+  const res = await fetch(`${API_BASE_URL}/recipes`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
