@@ -30,6 +30,12 @@ export default function MyRecipes() {
     setSavedRecipes((recipes) => recipes.filter((recipe) => recipe.recipeId !== recipeId));
   }
 
+  function handleEdit(recipe) {
+    navigate(`/create-recipe?edit=${recipe.recipeId}`, {
+      state: { recipe },
+    });
+  }
+
   const visibleRecipes = activeTab === "created" ? createdRecipes : savedRecipes;
 
   return (
@@ -71,7 +77,7 @@ export default function MyRecipes() {
                 key={recipe.recipeId}
                 recipe={recipe}
                 variant="manage"
-                onEdit={activeTab === "created" ? () => navigate(`/create-recipe?edit=${recipe.recipeId}`) : undefined}
+                onEdit={activeTab === "created" ? () => handleEdit(recipe) : undefined}
                 onDelete={activeTab === "created" ? handleDelete : undefined}
                 onRemove={activeTab === "saved" ? handleRemove : undefined}
               />

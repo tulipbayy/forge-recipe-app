@@ -74,6 +74,31 @@ export async function createRecipe(recipe) {
   return res.json();
 }
 
+export async function getCommunityRecipe(recipeId) {
+  const res = await fetch(`${API_BASE_URL}/recipes/${recipeId}?source=community`);
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || "Failed to load recipe");
+  }
+  return res.json();
+}
+
+export async function updateRecipe(recipeId, recipe) {
+  const res = await fetch(`${API_BASE_URL}/recipes/${recipeId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders()),
+    },
+    body: JSON.stringify(recipe),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || "Failed to update recipe");
+  }
+  return res.json();
+}
+
 export async function toggleUpvote(commentId) {
   const res = await fetch(`${API_BASE_URL}/comments/${commentId}/upvote`, {
     method: "POST",

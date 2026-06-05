@@ -3,6 +3,19 @@ import { FieldValue } from "firebase-admin/firestore";
 import { admin, db } from "../firebaseAdmin.js";
 import { requireAuth } from "../middleware/auth.js";
 const router = express.Router();
+
+function requireFirebaseAdmin(res) {
+  if (db) return false;
+  res.status(503).json({ error: "Firebase Admin is not configured." });
+  return true;
+}
+
+async function canModifyRecipe(recipe, userId) {
+  if (recipe.authorId === userId) return true;
+  const userDoc = await db.collection("users").doc(userId).get();
+  return userDoc.exists && userDoc.data().isAdmin === true;
+}
+
 function normalizeDummyRecipe(recipe) {
   return {
     recipeId: `official-${recipe.id}`,
@@ -113,6 +126,8 @@ router.get("/search", async (req, res) => {
 });
 router.post("/", requireAuth, async (req, res) => {
   try {
+    if (requireFirebaseAdmin(res)) return;
+
     const { title, ingredients, instructions, imageUrl, category, description } =
       req.body;
     if (!title || !title.trim()) {
@@ -149,6 +164,83 @@ router.post("/", requireAuth, async (req, res) => {
     res.status(500).json({ error: "Failed to create recipe" });
   }
 });
+
+router.put("/:id", requireAuth, async (req, res) => {
+  try {
+    if (requireFirebaseAdmin(res)) return;
+
+    const { id } = req.params;
+    const { title, ingredients, instructions, imageUrl, category, description } =
+      req.body;
+
+    if (!title || !title.trim()) {
+      return res.status(400).json({ error: "Title is required" });
+    }
+
+    const cleanIngredients = (ingredients || []).filter((i) => i?.trim());
+    const cleanInstructions = (instructions || []).filter((i) => i?.trim());
+
+    if (cleanIngredients.length === 0) {
+      return res.status(400).json({ error: "At least one ingredient is required" });
+    }
+    if (cleanInstructions.length === 0) {
+      return res.status(400).json({ error: "At least one instruction is required" });
+    }
+
+    const ref = db.collection("recipes").doc(id);
+    const snap = await ref.get();
+    if (!snap.exists) {
+      return res.status(404).json({ error: "Recipe not found" });
+    }
+
+    const recipe = snap.data();
+    if (!(await canModifyRecipe(recipe, req.user.userId))) {
+      return res.status(403).json({ error: "Not authorized to edit this recipe" });
+    }
+
+    await ref.update({
+      title: title.trim(),
+      ingredients: cleanIngredients,
+      instructions: cleanInstructions,
+      imageUrl: imageUrl || "",
+      category: category || recipe.category || "Dinner",
+      description: description || "",
+      approved: false,
+      rejected: false,
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+
+    const updated = await ref.get();
+    res.json({ recipeId: updated.id, ...updated.data() });
+  } catch (error) {
+    console.error("Error in PUT /api/recipes/:id", error);
+    res.status(500).json({ error: "Failed to update recipe" });
+  }
+});
+
+router.delete("/:id", requireAuth, async (req, res) => {
+  try {
+    if (requireFirebaseAdmin(res)) return;
+
+    const { id } = req.params;
+    const ref = db.collection("recipes").doc(id);
+    const snap = await ref.get();
+    if (!snap.exists) {
+      return res.status(404).json({ error: "Recipe not found" });
+    }
+
+    if (!(await canModifyRecipe(snap.data(), req.user.userId))) {
+      return res.status(403).json({ error: "Not authorized to delete this recipe" });
+    }
+
+    await ref.delete();
+    res.json({ recipeId: id, deleted: true });
+  } catch (error) {
+    console.error("Error in DELETE /api/recipes/:id", error);
+    res.status(500).json({ error: "Failed to delete recipe" });
+  }
+});
+
 router.get("/:id", async (req, res) => {
   const { id } = req.params;
   const source = req.query.source || "";

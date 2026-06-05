@@ -1,17 +1,10 @@
 import OpenAI from 'openai';
 import dotenv from "dotenv";
 import express from "express";
-import bodyParser from "body-parser";
-import cors from "cors";
 import rateLimit from 'express-rate-limit';
 
 dotenv.config();
 const router = express.Router();
-
-router.use(cors());
-const port = 5001;
-
-router.use(bodyParser.json());
 
 // to limit amount of questions user can ask the assistant
 const chatLimiter = rateLimit({
