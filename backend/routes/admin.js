@@ -75,4 +75,67 @@ router.patch('/:id/reject', async(req, res) => {
     }
 });
 
+// get stats (pending / published / rejected counts)
+router.get('/stats', async (req, res) => {
+  try {
+    const [pendingSnap, publishedSnap, rejectedSnap] = await Promise.all([
+      db.collection('recipes')
+        .where('approved', '==', false)
+        .where('source', '==', 'community')
+        .get(),
+      db.collection('recipes')
+        .where('approved', '==', true)
+        .where('source', '==', 'community')
+        .get(),
+      db.collection('recipes')
+        .where('rejected', '==', true)
+        .where('source', '==', 'community')
+        .get(),
+    ]);
+    res.json({
+      pending: pendingSnap.size,
+      published: publishedSnap.size,
+      rejected: rejectedSnap.size,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/published', async (req, res) => {
+  try {
+    const snapshot = await db.collection('recipes')
+      .where('approved', '==', true)
+      .where('source', '==', 'community')
+      .get();
+
+    const recipes = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    res.json(recipes);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/rejected', async (req, res) => {
+  try {
+    const snapshot = await db.collection('recipes')
+      .where('rejected', '==', true)
+      .where('source', '==', 'community')
+      .get();
+
+    const recipes = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    res.json(recipes);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;

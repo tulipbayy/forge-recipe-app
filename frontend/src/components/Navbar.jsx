@@ -23,7 +23,12 @@ export default function Navbar({ onMenuClick }) {
   return (
     <header className="top-nav">
       <div className="brand-group">
-        <button type="button" className="menu-button" onClick={onMenuClick} aria-label="Open navigation menu">
+        <button
+          type="button"
+          className="menu-button"
+          onClick={onMenuClick}
+          aria-label="Open navigation menu"
+        >
           &#9776;
         </button>
         <NavLink to="/" className="brand">
@@ -35,6 +40,7 @@ export default function Navbar({ onMenuClick }) {
         <NavLink to="/recipes">Recipes</NavLink>
         <NavLink to="/my-recipes">My Recipes</NavLink>
         <NavLink to="/create-recipe">Create Recipe</NavLink>
+        {userDoc?.isAdmin && <NavLink to="/admin">Admin</NavLink>}
       </nav>
       <div className="account-actions">
         {firebaseUser ? (
@@ -42,12 +48,20 @@ export default function Navbar({ onMenuClick }) {
             <div className="avatar" aria-label="Current user">
               {initials}
             </div>
-            <button type="button" className="auth-button" onClick={handleLogout}>
+            <button
+              type="button"
+              className="auth-button"
+              onClick={handleLogout}
+            >
               Logout
             </button>
           </>
         ) : (
-          <button type="button" className="auth-button primary" onClick={handleLogin}>
+          <button
+            type="button"
+            className="auth-button primary"
+            onClick={handleLogin}
+          >
             Login
           </button>
         )}
