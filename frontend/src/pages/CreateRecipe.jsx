@@ -4,6 +4,7 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "../../public/firebase";
 import { useAuth } from "../context/AuthContext";
 import { createRecipe } from "../services/api";
+import AppLayout from "../components/AppLayout.jsx";
 
 const defaultImage =
   "https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=800&auto=format&fit=crop";
@@ -85,13 +86,14 @@ export default function CreateRecipe() {
   };
 
   return (
-    <div className="min-h-screen bg-[#E8F3EB] p-8">
-      <div className="max-w-6xl mx-auto space-y-8">
-        <h1 className="text-4xl font-serif text-slate-800">Create Recipe</h1>
+    <AppLayout>
+      <main className="mint-page p-8">
+        <div className="max-w-6xl mx-auto space-y-8">
+          <h1 className="text-4xl font-serif text-slate-800">Create Recipe</h1>
 
-        <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-white rounded-2xl p-8 shadow-sm space-y-5">
+          <form onSubmit={handleSubmit}>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="bg-white rounded-2xl p-8 shadow-sm space-y-5">
               <input
                 type="text"
                 placeholder="Title"
@@ -170,8 +172,9 @@ export default function CreateRecipe() {
               </label>
             </div>
           </div>
-        </form>
-      </div>
-    </div>
+          </form>
+        </div>
+      </main>
+    </AppLayout>
   );
 }
