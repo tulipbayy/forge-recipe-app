@@ -1,5 +1,8 @@
 import express from "express";
+import { FieldValue } from "firebase-admin/firestore";
 import { admin, db } from "../firebaseAdmin.js";
+import { requireAuth } from "../middleware/auth.js";
+
 const router = express.Router();
 
 // 1. RYAN'S ROUTE: Get all recipes for the Home page
@@ -94,6 +97,50 @@ router.get("/search", async (req, res) => {
   } catch (error) {
     console.error("Error in GET /api/recipes/search", error);
     return res.status(500).json({ error: "Failed to search recipes" });
+  }
+});
+
+router.post("/", requireAuth, async (req, res) => {
+  try {
+    const { title, ingredients, instructions, imageUrl, category, description } =
+      req.body;
+
+    if (!title || !title.trim()) {
+      return res.status(400).json({ error: "Title is required" });
+    }
+
+    const cleanIngredients = (ingredients || []).filter((i) => i?.trim());
+    const cleanInstructions = (instructions || []).filter((i) => i?.trim());
+
+    if (cleanIngredients.length === 0) {
+      return res.status(400).json({ error: "At least one ingredient is required" });
+    }
+    if (cleanInstructions.length === 0) {
+      return res.status(400).json({ error: "At least one instruction is required" });
+    }
+
+    const ref = await db.collection("recipes").add({
+      title: title.trim(),
+      ingredients: cleanIngredients,
+      instructions: cleanInstructions,
+      imageUrl: imageUrl || "",
+      category: category || "Dinner",
+      description: description || "",
+      source: "community",
+      authorId: req.user.userId,
+      approved: false,
+      rejected: false,
+      ratings: [],
+      ratingCount: 0,
+      averageRating: null,
+      createdAt: FieldValue.serverTimestamp(),
+    });
+
+    const created = await ref.get();
+    res.status(201).json({ recipeId: created.id, ...created.data() });
+  } catch (error) {
+    console.error("Error in POST /api/recipes", error);
+    res.status(500).json({ error: "Failed to create recipe" });
   }
 });
 
